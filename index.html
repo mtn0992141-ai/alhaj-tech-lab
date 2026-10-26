@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اختبار مستوى الحاسوب</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#1b2430;--pr:#2563eb;--ok:#16a34a;--no:#dc2626;--mut:#64748b;--bd:#e2e8f0}
+@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--tx:#f1f5f9;--bd:#334155;--mut:#94a3b8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Tahoma,Arial,sans-serif;line-height:1.7;padding:16px}
+.box{max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:24px}
+h1{margin:0 0 8px;font-size:1.5rem}
+p{color:var(--mut);margin:6px 0}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:12px 14px;width:100%;text-align:right;margin-top:10px}
+button.main{background:var(--pr);color:#fff;border:0;text-align:center;font-weight:bold}
+button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+button.no{background:var(--no);color:#fff;border-color:var(--no)}
+.bar{height:8px;background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;background:var(--pr);transition:width .3s}
+.big{font-size:3rem;font-weight:bold;text-align:center;margin:8px 0}
+.lvl{text-align:center;font-size:1.3rem;font-weight:bold}
+.rec{background:var(--bg);border-radius:12px;padding:14px;margin-top:16px}
+.hide{display:none}
+.tbar{height:6px;background:var(--bd);border-radius:6px;overflow:hidden;margin:0 0 14px}.tbar i{display:block;height:100%;width:100%;background:var(--pr)}.tm{float:left;font-weight:bold}
+#start{margin:-24px;padding:24px;border-radius:16px;min-height:82vh;background:linear-gradient(rgba(8,12,28,.15) 0%,rgba(8,12,28,.55) 55%,rgba(8,12,28,.92) 100%),url(shop.jpg) center/cover no-repeat}
+#start:not(.hide){display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+#start .title{color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+#start .sub{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#start input{background:rgba(255,255,255,.92);color:#111}
+
+.shop{width:100%;height:auto;max-height:340px;object-fit:cover;margin:0 0 16px;display:block;border-radius:14px}
+input{font:inherit;width:100%;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin:0 0 14px;text-align:center;max-width:300px}
+.hero{text-align:center;padding:40px 0}
+.logo{font-size:4rem}
+.title{font-size:2.4rem;margin:10px 0;color:var(--pr)}
+.sub{font-size:1.4rem;color:var(--tx);margin:8px 0 28px}
+.go{font-size:1.2rem;padding:14px;max-width:260px;margin:0 auto;display:block}
+</style>
+</head>
+<body>
+<div class="box">
+  <div id="start" class="hero">
+    <h1 class="title">الحاج تكنولوجي</h1>
+    <p class="sub">اختبر نفسك يا بروف</p>
+    <p style="color:#fff;font-size:.95rem;text-shadow:0 1px 6px #000">⏱ 20 سؤال · 20 ثانية لكل سؤال</p>
+    <input id="nm" placeholder="اكتب اسمك هنا" maxlength="40">
+    <button class="main go" onclick="begin()">انطلق 🚀</button>
+  </div>
+  <div id="quiz" class="hide">
+    <div class="bar"><i id="prog"></i></div>
+    <p><span id="count"></span><b id="tm" class="tm"></b></p><div class="tbar"><i id="tfill"></i></div>
+    <h2 id="q" style="font-size:1.2rem;margin:4px 0"></h2>
+    <div id="opts"></div>
+    <button class="main hide" id="next" onclick="next()">التالي</button>
+  </div>
+  <div id="result" class="hide">
+    <h1 id="rname">نتيجتك</h1>
+    <div class="big" id="pct"></div>
+    <div class="lvl" id="lvl"></div>
+    <p style="text-align:center" id="det"></p>
+    <div class="rec" id="rec"></div>
+    <button class="main" onclick="cert()">🎓 حمّل شهادتك</button>
+    <button class="main" onclick="startQuiz()">أعد الاختبار</button>
+  </div>
+</div>
+<script>
+// [المستوى 1=أساسي 2=متوسط 3=متقدم, السؤال, الخيارات (الأولى هي الصحيحة)]
+const BANK=[
+[1,"أي من التالي هو جهاز إدخال؟",["لوحة المفاتيح","الشاشة","السماعات","الطابعة"]],
+[1,"أي من التالي هو جهاز إخراج؟",["الشاشة","الماوس","الماسح الضوئي","الميكروفون"]],
+[1,"ما هو العقل المفكر للحاسوب؟",["المعالج (CPU)","الشاشة","الفأرة","الكيبورد"]],
+[1,"اختصار النسخ في ويندوز هو:",["Ctrl + C","Ctrl + V","Ctrl + X","Ctrl + Z"]],
+[1,"اختصار اللصق في ويندوز هو:",["Ctrl + V","Ctrl + C","Ctrl + S","Ctrl + P"]],
+[1,"اختصار الحفظ في معظم البرامج هو:",["Ctrl + S","Ctrl + A","Ctrl + N","Ctrl + O"]],
+[1,"أي من التالي يعتبر نظام تشغيل؟",["Windows","Chrome","Word","Google"]],
+[1,"أي من التالي برنامج لتصفح الإنترنت؟",["Chrome","Excel","Photoshop","Paint"]],
+[1,"أين تذهب الملفات عند حذفها عادة في ويندوز؟",["سلة المحذوفات","سطح المكتب","القرص الصلب فقط","الإنترنت"]],
+[1,"امتداد ملفات برنامج Word هو:",[".docx",".xlsx",".pptx",".mp3"]],
+[1,"ماذا تعني كلمة Internet؟",["شبكة عالمية تربط الأجهزة","برنامج لكتابة النصوص","نوع من المعالجات","جهاز تخزين"]],
+[1,"وحدة التخزين الأكبر من بين التالي:",["جيجابايت (GB)","كيلوبايت (KB)","ميجابايت (MB)","بايت (Byte)"]],
+[2,"ما وظيفة الذاكرة العشوائية (RAM)؟",["تخزين مؤقت للبرامج أثناء عملها","تخزين الملفات للأبد","تبريد الجهاز","عرض الصورة"]],
+[2,"أيهما أسرع في التخزين؟",["SSD","HDD","قرص CD","فلاش قديم"]],
+[2,"في Excel، الدالة لجمع مجموعة أرقام هي:",["SUM","ADD","PLUS","TOTAL"]],
+[2,"ما معنى Wi-Fi؟",["اتصال لاسلكي بالإنترنت","نوع من الكابلات","برنامج حماية","نظام تشغيل"]],
+[2,"أيهما يعتبر كلمة مرور قوية؟",["Kh#9fL!2pQ","12345678","password","اسمك وتاريخ ميلادك"]],
+[2,"ما هو الفيروس في الحاسوب؟",["برنامج ضار ينتشر ويؤذي الملفات","قطعة هاردوير","نوع من الشاشات","برنامج لتسريع الجهاز"]],
+[2,"ما الفرق بين الحذف (Delete) و (Shift + Delete)؟",["Shift+Delete يحذف نهائيا دون سلة المحذوفات","لا فرق","Shift+Delete ينسخ الملف","Shift+Delete يخفي الملف"]],
+[2,"ما هي رسائل التصيّد (Phishing)؟",["رسائل مزيفة لسرقة بياناتك","رسائل إعلانية عادية","رسائل من نظام التشغيل","رسائل تحديث البرامج"]],
+[2,"ما هو النسخ الاحتياطي (Backup)؟",["حفظ نسخة إضافية من ملفاتك","حذف الملفات القديمة","تسريع الجهاز","تثبيت برنامج"]],
+[2,"أي من التالي سحابة تخزين؟",["Google Drive","Notepad","Calculator","Paint"]],
+[3,"ما هو عنوان IP؟",["رقم يعرّف الجهاز على الشبكة","اسم المستخدم","كلمة السر","نوع المعالج"]],
+[3,"ما وظيفة جدار الحماية (Firewall)؟",["مراقبة وحجب الاتصالات غير الآمنة","تبريد المعالج","ضغط الملفات","إصلاح القرص"]],
+[3,"أي من هذه لغات برمجة؟",["Python","HTML فقط","Windows","Excel"]],
+[3,"ما هو نظام Linux؟",["نظام تشغيل مفتوح المصدر","برنامج مكافحة فيروسات","لغة برمجة","متصفح"]],
+[3,"ما وظيفة DNS؟",["تحويل أسماء المواقع إلى عناوين IP","تشفير الملفات","تسريع المعالج","حماية من الفيروسات"]],
+[3,"ما هي المصادقة الثنائية (2FA)؟",["خطوتا تحقق لتسجيل الدخول","كلمتا مرور متطابقتان","جهازان متصلان","حسابان في موقع واحد"]],
+[3,"ما هو GitHub؟",["منصة لاستضافة وإدارة الأكواد","لعبة","برنامج رسم","نظام تشغيل"]],
+[3,"ما معنى Cache (الكاش)؟",["ذاكرة سريعة تخزن بيانات مستخدمة كثيرا","فيروس","نوع شاشة","برنامج تحميل"]]
+,[2,"ما الفرق بين RAM و ROM؟",["RAM مؤقتة ومتغيرة وROM دائمة للقراءة","RAM دائمة وROM مؤقتة","لا فرق بينهما","RAM للصوت وROM للصورة"]],
+[2,"ماذا يعني امتداد الملف .exe؟",["ملف تنفيذي لتشغيل برنامج","ملف صورة","ملف صوت","ملف نصي"]],
+[2,"ما وظيفة مدير المهام (Task Manager)؟",["مراقبة البرامج وإغلاق المعلّق منها","تنظيف الملفات","كتابة المستندات","تسريع الإنترنت"]],
+[2,"ما معنى تهيئة القرص (Format)؟",["مسح محتوياته وتجهيزه للاستخدام","نسخ القرص","تشفير القرص","فحص الفيروسات"]],
+[2,"ما الفرق بين نظام 32 بت و64 بت؟",["64 بت يدعم ذاكرة أكبر ومعالجة أكثر","لا فرق","32 بت أسرع دائما","64 بت للألعاب فقط"]],
+[2,"ما هو VPN؟",["شبكة خاصة تشفّر اتصالك وتخفي موقعك","برنامج لتحميل الأفلام","نوع من الفيروسات","متصفح إنترنت"]],
+[2,"ما هو الـ BIOS؟",["برنامج أساسي يشغّل الجهاز قبل نظام التشغيل","لعبة","متصفح","برنامج مكتبي"]],
+[3,"ما الفرق بين HTTP وHTTPS؟",["HTTPS مشفّر وأكثر أمانا","HTTPS أسرع فقط","HTTP للمواقع الكبيرة","لا فرق"]],
+[3,"ما هو هجوم DDoS؟",["إغراق خادم بطلبات حتى يتعطل","سرقة كلمة مرور","فيروس يحذف الملفات","رسالة احتيال"]],
+[3,"ما أسرع نوع ذاكرة داخل المعالج؟",["ذاكرة الكاش (Cache)","القرص الصلب","فلاش USB","التخزين السحابي"]],
+[3,"ما وظيفة الراوتر (Router)؟",["توجيه البيانات بين الشبكات","تخزين الملفات","طباعة المستندات","تبريد الأجهزة"]],
+[3,"ما هو RAID 1؟",["نسخ متطابق للبيانات على قرصين","دمج قرصين لسعة أكبر فقط","تشفير القرص","ضغط الملفات"]],
+[3,"أي أمر في CMD يعرض عنوان IP للجهاز؟",["ipconfig","dir","format","cd"]],
+[3,"ما هو الـ Ransomware؟",["برنامج يشفّر ملفاتك ويطلب فدية","برنامج لحذف الفيروسات","نظام تشغيل","جدار حماية"]],
+[3,"ما معنى Open Source؟",["الكود متاح للجميع للاطلاع والتعديل","برنامج مجاني فقط","برنامج مدفوع","برنامج بلا كود"]],
+[3,"ما هو الحوسبة السحابية (Cloud Computing)؟",["استخدام خوادم عبر الإنترنت بدل جهازك","جهاز تبريد","نوع معالج","برنامج رسم"]],
+[3,"ما قيمة الرقم الثنائي 1010 بالنظام العشري؟",["10","12","8","5"]],
+[3,"أي بروتوكول يُستخدم لإرسال البريد الإلكتروني؟",["SMTP","FTP","HTML","SSH"]],
+[3,"ما هي SQL؟",["لغة للتعامل مع قواعد البيانات","نظام تشغيل","متصفح","لعبة"]],
+[2,"ما الفرق بين النسخ الاحتياطي الكامل والتزايدي؟",["التزايدي ينسخ التغييرات منذ آخر نسخة فقط","لا فرق بينهما","الكامل ينسخ التغييرات فقط","التزايدي يحذف الأصل"]],
+[3,"ما وظيفة بروتوكول DHCP؟",["منح عناوين IP تلقائيا للأجهزة","تشفير الرسائل","تحويل أسماء المواقع","نقل الملفات"]],
+[3,"ما الفرق بين TCP وUDP؟",["TCP موثوق ويتأكد من وصول البيانات وUDP أسرع بلا ضمان","TCP للصوت فقط","لا فرق بينهما","UDP أكثر أمانا دائما"]],
+[3,"ما هو هجوم SQL Injection؟",["إدخال أوامر خبيثة في حقول الموقع للعبث بقاعدة البيانات","إرسال فيروس بالبريد","تخمين كلمة المرور","إغراق الخادم بالطلبات"]],
+[3,"ما هو هجوم Man-in-the-Middle؟",["اعتراض الاتصال بين طرفين والتجسس عليه","حذف الملفات","إيقاف الخادم","تشفير القرص"]],
+[3,"كم عدد البتات في عنوان IPv4؟",["32","64","128","16"]],
+[3,"ما قيمة الرقم الثنائي 11111111 بالعشري؟",["255","256","127","128"]],
+[3,"أي أمر يختبر الاتصال بين جهازين في الشبكة؟",["ping","copy","type","mkdir"]],
+[3,"ما هو الـ Hashing؟",["تحويل البيانات لقيمة ثابتة لا يمكن عكسها","ضغط الملفات","نسخ احتياطي","تسريع الشبكة"]],
+[3,"ما هو Git؟",["نظام لتتبع تغييرات الكود وإدارة إصداراته","لغة برمجة","نظام تشغيل","متصفح"]],
+[3,"ما الفرق بين المترجم (Compiler) والمفسّر (Interpreter)؟",["المترجم يحوّل الكود كله قبل التشغيل والمفسّر سطرا بسطر","لا فرق بينهما","المفسّر أسرع دائما","المترجم للغات الويب فقط"]],
+[3,"ما هي الآلة الافتراضية (Virtual Machine)؟",["نظام يعمل داخل نظام آخر كجهاز افتراضي","جهاز فعلي جديد","برنامج مكافحة فيروسات","نوع ذاكرة"]],
+[3,"أي تشفير يستخدم مفتاحين عام وخاص؟",["التشفير غير المتماثل","التشفير المتماثل","الضغط","الهاشينغ"]],
+[3,"أي خدمة يستخدم المنفذ 443 عادة؟",["HTTPS","FTP","SMTP","Telnet"]],
+[3,"ما معنى Latency في الشبكات؟",["زمن تأخر وصول البيانات","سرعة التحميل","حجم الملف","عدد المستخدمين"]],
+[3,"ما هي ثغرة Zero-day؟",["ثغرة غير معروفة لم تُصلَح بعد","فيروس قديم","نوع جدار حماية","نظام تشغيل"]]
+];
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+// ضع هنا رابط Google Apps Script لحفظ الأسماء (اتركه فارغا لو ما جهزتو)
+const SHEET_URL="https://script.google.com/macros/s/AKfycbxfuDb7c7665n5YAO7Jbuv-i83GnmVl9w6TeY_X8dq5IDHyqB1aCFG-x2SNZ9ziNGXh/exec";
+const TOTAL=20;let NAME="",LAST={};
+function begin(){const n=$("nm").value.trim();if(!n){alert("اكتب اسمك أول");return}NAME=n;startQuiz()}
+function save(){
+  if(!SHEET_URL)return;
+  try{fetch(SHEET_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},
+  body:JSON.stringify({name:NAME,percent:LAST.p,level:LAST.l,date:new Date().toLocaleString("ar")})})}catch(e){}
+}
+function cert(){
+  const c=document.createElement("canvas");c.width=1000;c.height=700;
+  const x=c.getContext("2d");x.direction="rtl";x.textAlign="center";
+  const lv=LAST.l.replace(/[^\u0600-\u06FF\s]/g,"").trim();
+  const draw=img=>{
+    x.fillStyle="#fff";x.fillRect(0,0,1000,700);
+    x.strokeStyle="#2563eb";x.lineWidth=12;x.strokeRect(25,25,950,650);
+    x.strokeStyle="#c9a227";x.lineWidth=3;x.strokeRect(45,45,910,610);
+    if(img){const h=110,w=img.width/img.height*h;x.drawImage(img,500-Math.min(w,200)/2,65,Math.min(w,200),h)}
+    x.fillStyle="#2563eb";x.font="bold 54px Tahoma";x.fillText("شهادة مستوى الحاسوب",500,230);
+    x.fillStyle="#334155";x.font="28px Tahoma";x.fillText("تشهد الحاج تكنولوجي بأن",500,300);
+    x.fillStyle="#111";x.font="bold 60px Tahoma";x.fillText(NAME,500,385);
+    x.fillStyle="#334155";x.font="30px Tahoma";x.fillText("حصل على نسبة "+LAST.p+"% ("+LAST.score+" من "+TOTAL+")",500,455);
+    x.fillStyle="#16a34a";x.font="bold 44px Tahoma";x.fillText("المستوى: "+lv,500,525);
+    x.fillStyle="#64748b";x.font="22px Tahoma";x.fillText(new Date().toLocaleDateString("ar"),500,610);
+    const a=document.createElement("a");a.download="شهادة-"+NAME+".png";a.href=c.toDataURL("image/png");a.click();
+  };
+  const im=new Image();im.onload=()=>draw(im);im.onerror=()=>draw(null);im.src="shop.jpg";
+}let qs,i,score,locked,T;const TIME=20;
+function show(id){["start","quiz","result"].forEach(x=>$(x).classList.toggle("hide",x!==id))}
+function startQuiz(){
+  const pk=(l,n)=>shuffle(BANK.filter(q=>q[0]===l)).slice(0,n);
+  qs=shuffle([...pk(1,2),...pk(2,6),...pk(3,12)]).map(q=>({q:q[1],ans:q[2][0],opts:shuffle(q[2])}));
+  i=0;score=0;show("quiz");render();
+}
+function render(){
+  const q=qs[i];locked=false;startTimer();
+  $("count").textContent=`السؤال ${i+1} من ${TOTAL}`;
+  $("prog").style.width=(i/TOTAL*100)+"%";
+  $("q").textContent=q.q;
+  $("next").classList.add("hide");
+  $("opts").innerHTML="";
+  q.opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.textContent=o;b.onclick=()=>pick(b,o);$("opts").appendChild(b);
+  });
+}
+function pick(btn,o){
+  if(locked)return;locked=true;clearInterval(T);
+  const q=qs[i];
+  if(o===q.ans){score++;btn.classList.add("ok")}
+  else{btn.classList.add("no");[...$("opts").children].find(b=>b.textContent===q.ans).classList.add("ok")}
+  $("next").textContent=i===TOTAL-1?"شوف النتيجة":"التالي";
+  $("next").classList.remove("hide");
+}
+function startTimer(){
+  clearInterval(T);const t0=Date.now();
+  $("tm").textContent="⏱ "+TIME;$("tfill").style.width="100%";$("tfill").style.background="var(--pr)";
+  T=setInterval(()=>{
+    const left=TIME-(Date.now()-t0)/1000;
+    if(left<=0){clearInterval(T);timeout();return}
+    $("tm").textContent="⏱ "+Math.ceil(left);
+    $("tfill").style.width=(left/TIME*100)+"%";
+    if(left<8)$("tfill").style.background="var(--no)";
+  },100);
+}
+function timeout(){
+  if(locked)return;locked=true;
+  const q=qs[i];
+  [...$("opts").children].forEach(b=>{if(b.textContent===q.ans)b.classList.add("ok")});
+  $("tm").textContent="⏰ انتهى الوقت";
+  $("next").textContent=i===TOTAL-1?"شوف النتيجة":"التالي";
+  $("next").classList.remove("hide");
+}
+function next(){i++;i<TOTAL?render():finish()}
+function finish(){
+  const p=Math.round(score/TOTAL*100);
+  let l,r;
+  if(p<50){l="🌱 مبتدئ";r="ابدأ من الصفر: تعرّف على أجزاء الحاسوب، الماوس والكيبورد، الملفات والمجلدات، وأساسيات ويندوز."}
+  else if(p<70){l="👍 جيد";r="ابدأ من المستوى المتوسط: Word وExcel، الإنترنت والبريد، الحماية الأساسية، وإدارة الملفات."}
+  else if(p<85){l="⭐ جيد جدًا";r="ابدأ من المستوى المتقدم: الشبكات، الأمان، أساسيات البرمجة، وإدارة النظام."}
+  else{l="🏆 ممتاز";r="مستواك ممتاز! تقدر تبدأ مباشرة في التخصصات: البرمجة، الشبكات، الأمن السيبراني، أو Linux."}
+  LAST={p,l,score};save();
+  $("pct").textContent=p+"%";$("lvl").textContent=l;
+  $("det").textContent=`أجبت صح على ${score} من ${TOTAL}`;
+  $("rec").innerHTML="<b>من وين تبدأ؟</b><br>"+r;
+  $("rname").textContent="نتيجتك يا "+NAME;show("result");
+}
+</script>
+</body>
+</html>
